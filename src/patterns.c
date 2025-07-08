@@ -1,8 +1,14 @@
 #include "patterns.h"
 #include "turn_signal.h"
 #include "led_color.h"
+#include "led_layout.h"
+#include "headlight.h"
 #include <stdint.h>
 #include <math.h>
+
+#define NUM_SIDES 2
+#define SIDE_LEFT 0
+#define SIDE_RIGHT 1
 
 // Helper: interpolate between yellow and orange
 static rgb_t lerp_yellow_orange(float t)
@@ -29,21 +35,26 @@ void reset_patterns(void)
 
 void led_update(uint32_t time_ms)
 {
-  uint8_t turn_signal = turn_signal_is_active();
-  pattern_mode_t new_mode = turn_signal ? PATTERN_MODE_TURN_SIGNAL : PATTERN_MODE_NORMAL;
-  if (new_mode != current_pattern_mode)
+  static pattern_mode_t prev_mode[NUM_SIDES] = {PATTERN_MODE_NORMAL, PATTERN_MODE_NORMAL};
+  uint8_t turn_signal[NUM_SIDES] = {turn_signal_left_is_active(), turn_signal_right_is_active()};
+  pattern_mode_t new_mode[NUM_SIDES];
+  for (int side = 0; side < NUM_SIDES; ++side)
   {
-    reset_patterns();
-    current_pattern_mode = new_mode;
-  }
-  if (turn_signal)
-  {
-    pattern_turn_signal(time_ms, 1);
-  }
-  else
-  {
-    pattern_rows(time_ms);
-    pattern_loop_analog(time_ms);
+    new_mode[side] = turn_signal[side] ? PATTERN_MODE_TURN_SIGNAL : PATTERN_MODE_NORMAL;
+    if (new_mode[side] != prev_mode[side])
+    {
+      reset_patterns_side(side);
+      prev_mode[side] = new_mode[side];
+    }
+    if (turn_signal[side])
+    {
+      pattern_turn_signal_side(side, time_ms, 1);
+    }
+    else
+    {
+      pattern_rows_side(side, time_ms);
+      pattern_loop_analog_side(side, time_ms);
+    }
   }
 }
 
