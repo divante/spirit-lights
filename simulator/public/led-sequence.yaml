@@ -1,0 +1,14 @@
+- pattern: turn-signal-left
+  when:
+    - turn-signal-left
+  ringLEDSequence:
+    - color: #FFA500
+      count: 1
+      startIndex: 4
+      direction: all
+      speed: 150
+      pattern: breathe
+      chase:
+        direction: all
+        spacing: 1
+        speedOffset: -75
